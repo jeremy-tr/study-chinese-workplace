@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎮 職場中文 RPG — Level 1</title>
+<style>
+:root {
+  --bg: #0f0f1a;
+  --card: #1a1a2e;
+  --card2: #16213e;
+  --accent: #e94560;
+  --accent2: #0f3460;
+  --gold: #f5c518;
+  --green: #00c853;
+  --blue: #448aff;
+  --text: #e0e0e0;
+  --text2: #9e9e9e;
+  --radius: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, 'Segoe UI', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  background: var(--bg); color: var(--text); min-height:100vh; overflow-x:hidden;
+}
+
+/* NAV */
+.nav { display:flex; position:sticky; top:0; z-index:100; background:var(--card); border-bottom:2px solid var(--accent); overflow-x:auto; }
+.nav button {
+  flex:1; min-width:80px; padding:12px 8px; border:none; background:transparent;
+  color:var(--text2); font-size:13px; cursor:pointer; white-space:nowrap; transition:.2s;
+}
+.nav button.active { color:var(--gold); border-bottom:3px solid var(--gold); font-weight:700; }
+.nav button:hover { color:var(--text); }
+
+/* STATS BAR */
+.stats-bar {
+  display:flex; justify-content:space-around; padding:12px 16px; background:var(--card2);
+  border-bottom:1px solid #ffffff15; flex-wrap:wrap; gap:8px;
+}
+.stat { text-align:center; }
+.stat-value { font-size:22px; font-weight:800; color:var(--gold); }
+.stat-label { font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:1px; }
+
+/* MAIN */
+.page { display:none; padding:16px; max-width:720px; margin:0 auto; }
+.page.active { display:block; }
+h1 { font-size:24px; margin-bottom:8px; }
+h2 { font-size:18px; color:var(--gold); margin:24px 0 12px; display:flex; align-items:center; gap:8px; }
+h3 { font-size:15px; color:var(--blue); margin:16px 0 8px; }
+p, li { font-size:14px; line-height:1.7; }
+
+/* DAY SELECTOR */
+.day-selector { display:flex; gap:6px; margin:16px 0; flex-wrap:wrap; }
+.day-btn {
+  width:44px; height:44px; border-radius:50%; border:2px solid var(--accent2);
+  background:transparent; color:var(--text); font-size:14px; font-weight:700;
+  cursor:pointer; transition:.2s; position:relative;
+}
+.day-btn.active { border-color:var(--gold); background:var(--gold); color:var(--bg); }
+.day-btn.completed::after {
+  content:'✓'; position:absolute; top:-4px; right:-4px; width:18px; height:18px;
+  background:var(--green); border-radius:50%; font-size:10px; display:flex;
+  align-items:center; justify-content:center; color:#fff;
+}
+.day-btn:hover { border-color:var(--accent); }
+
+/* QUEST */
+.quest {
+  background:var(--card); border-radius:var(--radius); padding:20px; margin:16px 0;
+  border-left:4px solid var(--accent);
+}
+.quest-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:4px; }
+.quest-title { font-size:15px; font-weight:700; color:var(--accent); }
+.quest-timer { font-size:12px; color:var(--text2); }
+
+/* FLASHCARDS */
+.flashcard-grid { display:grid; gap:12px; }
+.flashcard { perspective:1000px; min-height:140px; cursor:pointer; }
+.flashcard-inner {
+  position:relative; width:100%; min-height:140px; transition:transform 0.6s;
+  transform-style:preserve-3d;
+}
+.flashcard.flipped .flashcard-inner { transform:rotateY(180deg); }
+.flashcard-front, .flashcard-back {
+  position:absolute; inset:0; backface-visibility:hidden;
+  border-radius:var(--radius); padding:16px; display:flex; flex-direction:column;
+  justify-content:center; align-items:center; text-align:center;
+}
+.flashcard-front {
+  background:linear-gradient(135deg, var(--accent2), var(--card2));
+  border:1px solid #ffffff15;
+}
+.flashcard-back {
+  background:linear-gradient(135deg, #1b4332, #2d6a4f);
+  transform:rotateY(180deg); border:1px solid #ffffff15;
+}
+.fc-label { font-size:11px; color:var(--text2); margin-bottom:4px; }
+.fc-word { font-size:20px; font-weight:700; }
+.fc-word-wrong { color:var(--accent); }
+.fc-word-right { color:var(--green); }
+.fc-hint { font-size:12px; color:var(--text2); margin-top:8px; }
+.fc-pinyin { font-size:12px; color:#a8dadc; margin:4px 0; }
+.fc-example { font-size:12px; color:var(--text); line-height:1.5; }
+
+/* SCORE BUTTONS */
+.score-btns { display:flex; gap:8px; margin-top:8px; justify-content:center; flex-wrap:wrap; }
+.score-btn {
+  padding:8px 16px; border-radius:20px; border:2px solid transparent; font-size:12px;
+  cursor:pointer; font-weight:600; transition:.2s; line-height:1.4;
+}
+.score-btn.s3 { background:var(--green); color:#fff; }
+.score-btn.s1 { background:var(--gold); color:var(--bg); }
+.score-btn.s0 { background:#555; color:#fff; }
+.score-btn.selected { border-color:#fff !important; transform:scale(1.05); }
+.score-btn:hover { transform:scale(1.05); }
+
+/* SENTENCE UPGRADE */
+.sentence-card {
+  background:var(--card); border-radius:var(--radius); padding:16px; margin:12px 0;
+  border:1px solid #ffffff10;
+}
+.sentence-wrong { color:var(--accent); font-size:14px; padding:12px; background:#ffffff08; border-radius:8px; margin-bottom:12px; line-height:1.7; }
+.reveal-btn {
+  width:100%; padding:12px; border:2px dashed var(--accent2); border-radius:8px;
+  background:transparent; color:var(--blue); font-size:13px; cursor:pointer; transition:.2s;
+}
+.reveal-btn:hover { border-color:var(--blue); background:#ffffff05; }
+.sentence-answer { display:none; padding:12px; background:#1b4332; border-radius:8px; margin-top:8px; }
+.sentence-answer.show { display:block; animation:fadeIn .3s; }
+.sentence-correct { color:var(--green); font-size:14px; margin-bottom:8px; line-height:1.7; }
+.sentence-note { font-size:12px; color:var(--text2); line-height:1.6; }
+
+/* PATTERN */
+.pattern-card {
+  background:linear-gradient(135deg, var(--card2), var(--card));
+  border-radius:var(--radius); padding:16px; margin:12px 0; border:1px solid #ffffff10;
+}
+.pattern-name { font-size:16px; font-weight:700; color:var(--blue); margin-bottom:4px; }
+.pattern-use { font-size:12px; color:var(--text2); margin-bottom:12px; }
+.pattern-example {
+  padding:12px; background:#ffffff08; border-radius:8px; margin:8px 0;
+  font-size:14px; line-height:1.8; border-left:3px solid var(--blue);
+}
+.pattern-pinyin { font-size:11px; color:var(--text2); }
+.pattern-vn { font-size:12px; color:var(--gold); font-style:italic; }
+
+/* CHEAT SHEET */
+.cheat-section { margin:16px 0; }
+.cheat-section h3 { font-size:15px; color:var(--gold); margin-bottom:8px; padding:8px 12px; background:var(--card2); border-radius:8px; }
+.cheat-table { width:100%; border-collapse:collapse; font-size:13px; }
+.cheat-table td { padding:10px 12px; border-bottom:1px solid #ffffff10; vertical-align:top; }
+.cheat-table td:first-child { color:var(--text2); width:28%; white-space:nowrap; }
+.template-block {
+  background:var(--card); padding:14px; border-radius:8px; margin:8px 0; font-size:13px;
+  line-height:1.8; border-left:3px solid var(--gold); white-space:pre-line;
+}
+
+/* BOSS */
+.boss-card {
+  background:linear-gradient(135deg, #4a1942, #1a1a2e);
+  border:2px solid var(--accent); border-radius:var(--radius); padding:20px; margin:16px 0;
+}
+.boss-title { font-size:18px; font-weight:800; color:var(--accent); text-align:center; margin-bottom:4px; }
+.boss-subtitle { font-size:12px; color:var(--text2); text-align:center; margin-bottom:16px; }
+.rubric { width:100%; border-collapse:collapse; font-size:12px; margin:12px 0; }
+.rubric th { padding:8px; background:var(--accent2); text-align:left; color:var(--gold); }
+.rubric td { padding:8px; border-bottom:1px solid #ffffff10; }
+
+/* PROGRESS */
+.progress-bar { height:8px; background:#ffffff15; border-radius:4px; overflow:hidden; margin:8px 0; }
+.progress-fill { height:100%; border-radius:4px; transition:width .5s; }
+.progress-fill.green { background:var(--green); }
+.progress-fill.gold { background:var(--gold); }
+
+.review-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin:12px 0; }
+.review-item {
+  padding:8px 4px; background:var(--card); border-radius:8px; text-align:center; font-size:11px;
+  cursor:pointer; border:1px solid #ffffff10; transition:.2s; overflow:hidden;
+}
+.review-item.mastered { background:#1b4332; border-color:var(--green); }
+.review-item .ri-word { font-size:13px; font-weight:700; }
+
+.tip-box {
+  padding:12px 16px; border-radius:8px; margin:12px 0; font-size:13px;
+  background:#1a3a2a; border:1px solid var(--green); color:#a8dadc;
+}
+
+.btn-primary {
+  padding:12px 24px; border:none; border-radius:8px; background:var(--accent);
+  color:#fff; font-size:14px; font-weight:600; cursor:pointer; transition:.2s; display:inline-block;
+}
+.btn-primary:hover { transform:scale(1.03); filter:brightness(1.1); }
+.btn-primary:disabled { opacity:.6; cursor:default; transform:none; }
+
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* TOAST */
+.toast {
+  position:fixed; top:70px; left:50%; transform:translateX(-50%); z-index:999;
+  padding:14px 28px; border-radius:12px; font-weight:700; font-size:16px;
+  box-shadow:0 4px 24px rgba(0,0,0,.5); animation:fadeIn .3s;
+}
+
+@media(max-width:480px) {
+  .nav button { font-size:11px; padding:10px 4px; }
+  .stats-bar { padding:8px 12px; }
+  .stat-value { font-size:18px; }
+  h1 { font-size:20px; }
+  .review-grid { grid-template-columns:repeat(4,1fr); }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <button class="active" onclick="showPage('learn',this)">📖 學習</button>
+  <button onclick="showPage('cheat',this)">📋 速查</button>
+  <button onclick="showPage('boss',this)">🐉 Boss</button>
+  <button onclick="showPage('progress',this)">📊 進度</button>
+</nav>
+
+<div class="stats-bar">
+  <div class="stat"><div class="stat-value" id="sXP">0</div><div class="stat-label">XP</div></div>
+  <div class="stat"><div class="stat-value" id="sStreak">0</div><div class="stat-label">🔥 Streak</div></div>
+  <div class="stat"><div class="stat-value" id="sCards">0/50</div><div class="stat-label">Mastered</div></div>
+  <div class="stat"><div class="stat-value" id="sDay">D1</div><div class="stat-label">Current</div></div>
+</div>
+
+<div class="page active" id="page-learn">
+  <h1>🏰 Level 1: Foundation Armor</h1>
+  <p style="color:var(--text2);font-size:13px">Tuần 1–2 · 50 cặp khẩu ngữ → thư ngữ · 10 cấu trúc chuyển ý</p>
+  <div class="day-selector" id="daySelector"></div>
+  <div id="dayContent"></div>
+</div>
+
+<div class="page" id="page-cheat">
+  <h1>📋 Meeting Cheat Sheet</h1>
+  <p style="color:var(--text2);font-size:13px;margin-bottom:16px">Mở trên điện thoại khi họp · Safety net</p>
+  <div class="cheat-section"><h3>🎤 開場 Opening</h3>
+    <div class="template-block">① 各位好，今天由我向各位報告___的進度/成果。
+報告內容分為三個部分：首先是___，其次是___，最後是___。</div>
+    <div class="template-block">② 各位好，在開始之前，先分享一個數據：___。
+接下來我會說明背後的原因及應對策略。</div>
+    <div class="template-block">③ 各位好，今天主要針對___進行報告，
+我會先說明現況，接著分析原因，最後提出解決方案。</div>
+  </div>
+  <div class="cheat-section"><h3>🔗 轉場 Transitions</h3>
+    <table class="cheat-table">
+      <tr><td>Liệt kê</td><td><b>首先</b>…<b>其次</b>…<b>最後</b>…</td></tr>
+      <tr><td>Chuyển phần</td><td><b>接下來，我們來看</b>___</td></tr>
+      <tr><td>Nhấn mạnh</td><td><b>值得注意的是，</b>___</td></tr>
+      <tr><td>Giải thích</td><td><b>換句話說</b> / <b>簡單來說</b>，___</td></tr>
+      <tr><td>Ngoài ra</td><td><b>除此之外</b> / <b>此外</b>，___</td></tr>
+      <tr><td>Tuy nhiên</td><td><b>然而</b> / <b>不過</b>，___</td></tr>
+      <tr><td>Về vấn đề X</td><td><b>針對</b>___/ <b>關於</b>___</td></tr>
+      <tr><td>Ví dụ</td><td><b>以…為例</b> / <b>舉例來說</b>，___</td></tr>
+      <tr><td>Tổng kết</td><td><b>綜上所述</b> / <b>總結來說</b>，___</td></tr>
+    </table>
+  </div>
+  <div class="cheat-section"><h3>📊 數據表達 Data</h3>
+    <table class="cheat-table">
+      <tr><td>↗️ Tăng</td><td>…較…<b>成長/增加</b>了 X%</td></tr>
+      <tr><td>↘️ Giảm</td><td>…較…<b>下降/減少</b>了 X%</td></tr>
+      <tr><td>✅ Đạt</td><td>已<b>達成</b> X% 的目標</td></tr>
+      <tr><td>❌ Chưa đạt</td><td><b>未達</b>預期，差距為 X%</td></tr>
+      <tr><td>📈 Xu hướng</td><td>呈現<b>上升/下降/持平</b>趨勢</td></tr>
+      <tr><td>🔍 Nguyên nhân</td><td><b>由於</b> A，<b>導致</b> B</td></tr>
+    </table>
+  </div>
+  <div class="cheat-section"><h3>❓ Q&A 應對</h3>
+    <table class="cheat-table">
+      <tr><td>Chưa có data</td><td>這部分數據我需要再<b>確認</b>，<b>會後</b>我會整理好<b>回覆</b>各位。</td></tr>
+      <tr><td>Cần suy nghĩ</td><td>這是一個很好的問題，<b>容我想一下</b>…</td></tr>
+      <tr><td>Đồng ý+bổ sung</td><td>您說得對，<b>另外</b>我想<b>補充</b>的是…</td></tr>
+      <tr><td>Từ chối khéo</td><td>我理解您的觀點，<b>不過</b>從數據來看…</td></tr>
+      <tr><td>Chuyển người</td><td>這部分<b>可能需要</b>請___來說明。</td></tr>
+      <tr><td>Xin ý kiến</td><td>關於這一點，<b>想請教</b>各位的看法？</td></tr>
+      <tr><td>Sửa lỗi</td><td><b>抱歉，我更正一下</b>，正確的數據是…</td></tr>
+    </table>
+  </div>
+  <div class="cheat-section"><h3>🎬 結尾 Closing</h3>
+    <div class="template-block">① 綜上所述，___。
+以上是我的報告，歡迎各位提問或給予指導。謝謝！</div>
+    <div class="template-block">② 總結來說，我方建議___。
+請各位給予指示，謝謝。</div>
+    <div class="template-block">③ 以上是目前的進度，後續行動方案為___。
+預計___完成，届時會再向各位更新。</div>
+  </div>
+  <div class="cheat-section"><h3>⚡ 急救包 Emergency</h3>
+    <table class="cheat-table">
+      <tr><td>聽不懂</td><td>不好意思，可以請您再說明一次嗎？</td></tr>
+      <tr><td>忘詞</td><td>讓我回到剛才的重點… / 容我看一下資料…</td></tr>
+      <tr><td>被打斷</td><td>好的，我先回應這個問題…</td></tr>
+      <tr><td>時間不夠</td><td>由於時間的關係，我簡要說明…</td></tr>
+      <tr><td>技術問題</td><td>不好意思，技術上遇到一點狀況，請稍等。</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="page" id="page-boss"><h1>🐉 Boss Challenges</h1><div id="bossContent"></div></div>
+
+<div class="page" id="page-progress">
+  <h1>📊 Progress Dashboard</h1>
+  <h2>🧠 Spaced Repetition</h2>
+  <p style="color:var(--text2);font-size:12px;margin-bottom:8px">Tap từ đã nhớ kĩ → đánh dấu Mastered</p>
+  <div class="review-grid" id="reviewGrid"></div>
+  <h2>📈 Scorecard</h2>
+  <div id="scorecard"></div>
+  <h2>🏆 Achievements</h2>
+  <div id="achievements"></div>
+  <div style="margin-top:32px;text-align:center">
+    <button class="btn-primary" onclick="resetAll()" style="background:#555;font-size:12px;padding:8px 16px">🗑️ Reset Progress</button>
+  </div>
+</div>
+
+<script>
+// ═══════ DATA ═══════
+const V=[
+{d:1,w:"跟大家說",r:"向各位報告",p:"xiàng gèwèi bàogào",e:"接下來由我向各位報告本月進度。"},
+{d:1,w:"得到",r:"取得 / 達成",p:"qǔdé / dáchéng",e:"本季度已取得顯著的成果。"},
+{d:1,w:"沒辦法",r:"未能 / 無法",p:"wèi néng / wúfǎ",e:"由於時間不足，未能完成全部測試。"},
+{d:1,w:"客人",r:"客戶 / 訪客",p:"kèhù / fǎngkè",e:"本次展會共接待了350位訪客。"},
+{d:1,w:"給你們",r:"提供給各位",p:"tígōng gěi gèwèi",e:"會後我會將完整報告提供給各位。"},
+{d:2,w:"很多",r:"大量 / 眾多",p:"dàliàng / zhòngduō",e:"我們收到大量的客戶詢問。"},
+{d:2,w:"不好/很差",r:"不理想 / 未達預期",p:"bù lǐxiǎng",e:"本月的轉換率不理想。"},
+{d:2,w:"因為",r:"由於",p:"yóuyú",e:"由於市場需求下降，銷售額減少。"},
+{d:2,w:"所以",r:"因此 / 導致",p:"yīncǐ / dǎozhì",e:"因此，我們需要調整行銷策略。"},
+{d:2,w:"覺得",r:"認為 / 評估",p:"rènwéi / pínggū",e:"我們評估目前的方案需要優化。"},
+{d:3,w:"看看",r:"檢視 / 審視",p:"jiǎnshì / shěnshì",e:"讓我們來檢視上季度的數據。"},
+{d:3,w:"做",r:"執行 / 推動",p:"zhíxíng / tuīdòng",e:"目前正在推動品牌升級計畫。"},
+{d:3,w:"問題很大",r:"面臨重大挑戰",p:"miànlín zhòngdà tiǎozhàn",e:"供應鏈方面面臨重大挑戰。"},
+{d:3,w:"好消息",r:"正面成果 / 亮點",p:"liàngdiǎn",e:"本月有幾個值得分享的亮點。"},
+{d:3,w:"差不多",r:"大致 / 大約",p:"dàzhì / dàyuē",e:"目前進度大致符合預期。"},
+{d:4,w:"試試看",r:"嘗試 / 測試",p:"chángshì / cèshì",e:"我們計畫下月嘗試新的行銷方式。"},
+{d:4,w:"比較好",r:"較為理想",p:"jiàowéi lǐxiǎng",e:"方案B較為理想，建議優先採用。"},
+{d:4,w:"要",r:"計畫 / 預計",p:"jìhuà / yùjì",e:"我們預計在Q4推出新產品。"},
+{d:4,w:"了解一下",r:"深入瞭解 / 進一步分析",p:"shēnrù liǎojiě",e:"我們需要進一步分析消費者需求。"},
+{d:4,w:"跟…說",r:"與…溝通 / 協調",p:"yǔ…gōutōng",e:"我已與業務團隊協調過此方案。"},
+{d:5,w:"現在",r:"目前 / 截至目前",p:"mùqián",e:"截至目前，我們已完成80%的進度。"},
+{d:5,w:"之後",r:"後續",p:"hòuxù",e:"後續我們將持續追蹤成效。"},
+{d:5,w:"大家",r:"各位 / 與會同仁",p:"gèwèi",e:"感謝各位撥冗參加今天的會議。"},
+{d:5,w:"一起做",r:"共同推動",p:"gòngtóng tuīdòng",e:"需要各部門共同推動此專案。"},
+{d:5,w:"OK/可以",r:"可行 / 沒有問題",p:"kěxíng",e:"經過評估，這個方案可行。"},
+{d:6,w:"快做完了",r:"即將完成",p:"jíjiāng wánchéng",e:"產品測試即將完成，預計下週交付。"},
+{d:6,w:"還沒做",r:"尚未啟動",p:"shàngwèi qǐdòng",e:"第二階段尚未啟動，預計下月開始。"},
+{d:6,w:"做到一半",r:"目前進度約50%",p:"mùqián jìndù yuē",e:"目前進度約70%，符合時程規劃。"},
+{d:6,w:"來不及",r:"時程上有所延遲",p:"yǒusuǒ yánchí",e:"由於審核流程，時程上有所延遲。"},
+{d:6,w:"趕快做",r:"加速推進",p:"jiāsù tuījìn",e:"我們正在加速推進此專案。"},
+{d:7,w:"我覺得應該",r:"建議 / 我方建議",p:"jiànyì",e:"我方建議優先拓展東南亞市場。"},
+{d:7,w:"好處",r:"優勢 / 效益",p:"yōushì / xiàoyì",e:"此方案的主要效益在於降低成本。"},
+{d:7,w:"壞處",r:"風險 / 潛在問題",p:"fēngxiǎn",e:"主要風險在於市場接受度尚不明確。"},
+{d:7,w:"重要",r:"關鍵 / 至關重要",p:"zhìguān zhòngyào",e:"這是本季度至關重要的行銷策略。"},
+{d:7,w:"很急",r:"具有急迫性",p:"jùyǒu jípòxìng",e:"此議題具有急迫性，建議本週內決議。"},
+{d:8,w:"接下來要做的事",r:"後續行動方案",p:"hòuxù xíngdòng fāng'àn",e:"以下是後續行動方案。"},
+{d:8,w:"分工",r:"任務分配",p:"rènwù fēnpèi",e:"以下是各部門的任務分配。"},
+{d:8,w:"確認一下",r:"確認 / 核實",p:"héshí",e:"我需要與供應商核實交期。"},
+{d:8,w:"改",r:"調整 / 優化",p:"tiáozhěng / yōuhuà",e:"我們已針對客戶回饋進行優化。"},
+{d:8,w:"用",r:"採用 / 運用",p:"cǎiyòng / yùnyòng",e:"本次活動採用全新的數位行銷策略。"},
+{d:9,w:"幫忙",r:"協助 / 支援",p:"xiézhù / zhīyuán",e:"需要請IT部門協助系統設定。"},
+{d:9,w:"負責",r:"主責 / 承辦",p:"zhǔzé / chéngbàn",e:"此專案由行銷部主責推動。"},
+{d:9,w:"一起",r:"共同 / 聯合",p:"gòngtóng / liánhé",e:"將與業務部聯合舉辦客戶說明會。"},
+{d:9,w:"問一下",r:"諮詢 / 請教",p:"zīxún / qǐngjiào",e:"這部分需要諮詢法務部的意見。"},
+{d:9,w:"告訴/通知",r:"知會 / 通報",p:"zhīhuì / tōngbào",e:"已知會相關部門配合辦理。"},
+{d:10,w:"我講完了",r:"以上是我的報告",p:"yǐshàng shì wǒ de bàogào",e:"以上是我的報告，謝謝各位。"},
+{d:10,w:"有問題嗎",r:"歡迎各位提問",p:"huānyíng gèwèi tíwèn",e:"歡迎各位提問或給予指導。"},
+{d:10,w:"等一下",r:"容我確認一下",p:"róng wǒ quèrèn yīxià",e:"容我確認一下這個數據。"},
+{d:10,w:"對不起說錯了",r:"抱歉，我更正一下",p:"wǒ gēngzhèng yīxià",e:"抱歉，我更正一下剛才的數據。"},
+{d:10,w:"想到一個idea",r:"有一個想法供各位參考",p:"gōng gèwèi cānkǎo",e:"我有一個想法供各位參考。"},
+];
+
+const S=[
+{d:1,w:"我跟大家說一下上個月的結果",r:"接下來由我向各位報告上月的執行成果。",n:"跟→向, 說一下→報告, 結果→執行成果"},
+{d:1,w:"今天我要說三個東西",r:"今天的報告內容分為三個部分。",n:"說→報告, 東西→部分, 分為=chia thành"},
+{d:1,w:"結果還不錯",r:"整體成果表現良好。",n:"還不錯→表現良好, 結果→成果"},
+{d:2,w:"因為東西來太慢，所以我們做不完",r:"由於物料交期延遲，導致我們未能如期完成。",n:"東西→物料, 來太慢→交期延遲, 做不完→未能如期完成"},
+{d:2,w:"我覺得這個方法不好，我們要換一個",r:"經過評估，我們認為目前的方案需要調整，建議改採替代方案。",n:"覺得→經過評估認為, 不好→需要調整"},
+{d:2,w:"下個月我們要多做一點",r:"下個月我們計畫加強執行力度，以達成既定目標。",n:"多做一點→加強執行力度, 以達成既定目標"},
+{d:3,w:"這個月比上個月好很多",r:"本月業績較上月顯著提升。",n:"好很多→顯著提升, 這個月→本月"},
+{d:3,w:"我們的東西賣得很好",r:"我們的產品銷售表現亮眼。",n:"東西→產品, 賣得很好→銷售表現亮眼"},
+{d:3,w:"這個事情我們還在想",r:"這部分我們仍在評估中，預計下週會有初步結論。",n:"想→評估中, 加timeline: 預計下週有初步結論"},
+{d:4,w:"我們要跟業務部門說一下這個事情",r:"我們需要與業務部門進行溝通，就此議題取得共識。",n:"跟…說→與…溝通, 事情→議題, 取得共識"},
+{d:4,w:"我希望下個月會更好",r:"我們有信心下個月的表現將會優於本月，主要將透過以下措施來改善。",n:"希望→有信心 (proactive), 更好→表現優於本月"},
+{d:4,w:"這個部分我不太確定，要再看看",r:"這部分我需要再確認相關數據，確認後會盡快回覆各位。",n:"不確定→需要再確認, 看看→確認後盡快回覆"},
+{d:5,w:"沒問題，大家OK的話就這樣",r:"如果各位沒有其他意見，我們就依照今天討論的方向執行。",n:"OK→沒有其他意見, 就這樣→依照方向執行"},
+{d:5,w:"我的報告講完了，有問題可以問",r:"以上是我今天的報告，如果各位有任何問題或建議，歡迎提出。謝謝！",n:"講完了→以上是報告, 可以問→歡迎提出"},
+{d:6,w:"這個project快做完了，大概下禮拜可以",r:"此專案即將完成，預計下週可交付初步成果。",n:"project→專案, 快做完→即將完成, 大概→預計"},
+{d:6,w:"那個還沒開始做，因為太忙了",r:"該項目尚未啟動，主要原因是目前資源集中在優先專案上。",n:"還沒開始→尚未啟動, 太忙→資源集中在優先專案"},
+{d:6,w:"時間不夠，可能會來不及",r:"以目前的進度來看，存在延遲的風險。我們正在評估是否需要調整時程或增加資源。",n:"來不及→存在延遲風險, 提解決方案不只提問題"},
+{d:7,w:"我覺得A比較好，因為比較便宜",r:"經過綜合評估，我方建議採用方案A。主要優勢在於成本較低，且投資報酬率較高。",n:"覺得→經過評估建議, 便宜→成本較低"},
+{d:7,w:"這個很重要，我們要趕快決定",r:"此議題至關重要且具有時效性，建議各位在本週內完成決議。",n:"很重要→至關重要, 趕快決定→本週內完成決議"},
+{d:8,w:"接下來先改design，然後確認supplier時間",r:"後續行動方案如下：第一，針對設計進行優化；第二，與供應商確認交期。",n:"要做的事→行動方案, 改→優化, 先/然後→第一/第二"},
+{d:8,w:"上次說要改的東西，我們已經改好了",r:"上次會議決議事項中需要調整的部分，我們已完成修正。",n:"上次說→上次會議決議事項, 改好了→已完成修正"},
+{d:9,w:"這個要請IT幫忙，我不會弄",r:"這部分屬於技術層面，我已請IT部門協助處理，預計明天完成。",n:"幫忙→協助處理, 不會弄→屬於技術層面 (không nói 'tôi không biết')"},
+{d:9,w:"我去告訴其他部門",r:"我會盡快知會相關部門，確保各方同步掌握最新資訊。",n:"告訴→知會, 其他部門→相關部門"},
+{d:10,w:"大家好，今天我跟你們說一下上個月的marketing結果。基本上還OK，但有一些問題。我覺得下個月應該改一下strategy。我講完了，有問題可以問。",r:"各位好，今天由我向各位報告上月的行銷執行成果。整體表現大致符合預期，然而部分環節仍有待改善。經過分析，我方建議下個月針對策略方向進行調整與優化。以上是我的報告，歡迎各位提問或給予指導，謝謝。",n:"Grand Upgrade — 跟→向, marketing→行銷, OK→符合預期, strategy→策略, 講完了→以上是報告"},
+];
+
+const P=[
+{d:1,nm:"首先…其次…最後…",use:"Liệt kê 3 phần",ex:[
+{z:"首先，我來說明本月的行銷活動成果。",p:"Shǒuxiān...",v:"Đầu tiên, tôi xin trình bày kết quả marketing tháng này."},
+{z:"其次，我們來看目前遇到的挑戰。",p:"Qícì...",v:"Tiếp theo, chúng ta xem các thách thức hiện tại."},
+{z:"最後，我會提出下個月的行動計畫。",p:"Zuìhòu...",v:"Cuối cùng, tôi đưa ra kế hoạch hành động tháng tới."}]},
+{d:2,nm:"接下來，我們來看…",use:"Chuyển slide / chuyển phần",ex:[
+{z:"接下來，我們來看本月的銷售數據。",p:"Jiēxiàlái...",v:"Tiếp theo, cùng xem dữ liệu bán hàng tháng này."},
+{z:"接下來請看這張圖表。",p:"",v:"Tiếp theo xin mời xem biểu đồ này."},
+{z:"現在讓我們進入下一個部分。",p:"",v:"Bây giờ chúng ta vào phần tiếp theo."}]},
+{d:3,nm:"值得注意的是…",use:"Highlight điểm quan trọng",ex:[
+{z:"值得注意的是，線上通路的訂單量首次超過了線下。",p:"Zhídé zhùyì de shì...",v:"Đáng chú ý, đơn hàng online lần đầu vượt offline."},
+{z:"值得關注的是，競品最近推出了類似的產品線。",p:"",v:"Đáng quan tâm, đối thủ ra mắt sản phẩm tương tự."},
+{z:"請大家特別留意這個數據。",p:"",v:"Xin mọi người chú ý số liệu này."}]},
+{d:4,nm:"換句話說… / 也就是說…",use:"Diễn giải lại",ex:[
+{z:"換句話說，我們的品牌知名度有了明顯的提升。",p:"Huàn jù huà shuō...",v:"Nói cách khác, độ nhận biết thương hiệu tăng rõ rệt."},
+{z:"也就是說，如果不調整策略，下季度可能會面臨更大的壓力。",p:"",v:"Tức là, nếu không điều chỉnh, quý sau áp lực hơn."},
+{z:"簡單來說，這個方案能幫我們節省30%的行銷預算。",p:"",v:"Nói đơn giản, phương án này tiết kiệm 30% ngân sách."}]},
+{d:5,nm:"綜上所述… / 總結來說…",use:"Kết luận, tổng kết",ex:[
+{z:"綜上所述，本月的整體表現優於預期，但仍有改善空間。",p:"Zōngshàng suǒshù...",v:"Tổng kết, tháng này tốt hơn kỳ vọng nhưng vẫn còn room."},
+{z:"總結來說，我們建議優先執行方案A。",p:"",v:"Tóm lại, đề xuất ưu tiên PA A."},
+{z:"總的來說，這次展會的效益是正面的。",p:"",v:"Nhìn chung, hiệu quả triển lãm tích cực."}]},
+{d:6,nm:"然而 / 不過",use:"Counter-point, mặt trái",ex:[
+{z:"整體業績有所成長，然而，部分產品線的表現仍不理想。",p:"Rán'ér...",v:"Hiệu suất tổng thể tăng, tuy nhiên một số dòng SP chưa khả quan."},
+{z:"本次展會的參觀人數很多，不過，實際轉換為訂單的比例偏低。",p:"",v:"Visitor đông, tuy nhiên tỷ lệ chuyển đổi khá thấp."},
+{z:"市場反應相當正面，然而，仍需關注競品的定價策略。",p:"",v:"Phản hồi tích cực, tuy nhiên cần lưu ý giá đối thủ."}]},
+{d:7,nm:"針對… / 關於…",use:"Về vấn đề X",ex:[
+{z:"針對行銷預算的部分，以下是我的分析。",p:"Zhēnduì...",v:"Về phần ngân sách marketing, sau đây là phân tích."},
+{z:"關於新產品的上市時程，目前規劃如下。",p:"",v:"Về lịch trình ra mắt SP mới, kế hoạch như sau."},
+{z:"針對上次會議提到的問題，我們已有初步的解決方案。",p:"",v:"Về vấn đề cuộc họp trước, đã có phương án sơ bộ."}]},
+{d:8,nm:"除此之外… / 此外…",use:"Ngoài ra",ex:[
+{z:"除此之外，我們也同步進行了社群媒體的推廣活動。",p:"Chú cǐ zhī wài...",v:"Ngoài ra, cũng đồng thời quảng bá trên social media."},
+{z:"此外，我想補充一點關於預算的說明。",p:"",v:"Ngoài ra, muốn bổ sung một điểm về ngân sách."},
+{z:"除了上述成果之外，我們還觀察到一個新的市場趨勢。",p:"",v:"Ngoài kết quả trên, còn quan sát được xu hướng mới."}]},
+{d:9,nm:"以…為例 / 舉例來說",use:"Đưa ví dụ",ex:[
+{z:"以上個月的行銷活動為例，社群互動率提升了40%。",p:"Yǐ...wéi lì...",v:"Lấy marketing tháng trước làm VD, tương tác social +40%."},
+{z:"舉例來說，A產品在日本市場的銷量成長了25%。",p:"",v:"Ví dụ, SP A tại Nhật +25%."},
+{z:"以競品X公司為例，他們採用的策略是…",p:"",v:"Lấy đối thủ X làm VD, chiến lược họ là…"}]},
+{d:10,nm:"🎯 All Patterns Combined",use:"Full combo!",ex:[
+{z:"各位好，首先我來報告本月成果。接下來我們來看數據。值得注意的是，成長率達20%。然而，部分市場仍有挑戰。針對這個問題，我方建議調整策略。此外，我們也計畫拓展新通路。以上月為例，新通路已帶來15%的業績。綜上所述，整體方向正確。",p:"",v:"Full combo — Dùng tất cả 10 patterns trong 1 đoạn!"}]},
+];
+
+const DAY_NAMES=['First Blood','Gear Up','Shield Wall','Critical Hit','Week 1 Final','Second Wind','Power Surge','Fortress','Reinforce','LEVEL 1 FINAL 🐉'];
+
+// ═══════ STATE ═══════
+let st;
+function defSt(){return{day:1,streak:0,lastDate:null,ds:{},cs:{},rv:{},cd:[],bs:{}};}
+function load(){try{const s=localStorage.getItem('zw2');return s?{...defSt(),...JSON.parse(s)}:defSt();}catch(e){return defSt();}}
+function save(){try{localStorage.setItem('zw2',JSON.stringify(st));}catch(e){}}
+st=load();
+
+// ═══════ NAV ═══════
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(id==='progress')renderProgress();
+  if(id==='boss')renderBoss();
+}
+
+// ═══════ TOAST ═══════
+function toast(text,bg='linear-gradient(135deg,#f5c518,#ff8c00)',color='#000'){
+  const d=document.createElement('div');
+  d.className='toast';d.style.background=bg;d.style.color=color;d.textContent=text;
+  document.body.appendChild(d);setTimeout(()=>d.remove(),2500);
+}
+
+// ═══════ STATS ═══════
+function calcXP(){
+  let x=0;
+  for(const d in st.ds){const o=st.ds[d];x+=(o.a||0)+(o.b||0)+(o.c||0);}
+  for(const b in st.bs)x+=st.bs[b];
+  return x;
+}
+function countMastered(){return Object.values(st.cs).filter(v=>v).length;}
+function updateStats(){
+  document.getElementById('sXP').textContent=calcXP();
+  document.getElementById('sStreak').textContent=st.streak;
+  document.getElementById('sCards').textContent=countMastered()+'/50';
+  document.getElementById('sDay').textContent='D'+st.day;
+}
+
+// ═══════ DAY SELECTOR ═══════
+function renderDays(){
+  const c=document.getElementById('daySelector');c.innerHTML='';
+  for(let d=1;d<=10;d++){
+    const b=document.createElement('button');
+    b.className='day-btn'+(d===st.day?' active':'')+(st.cd.includes(d)?' completed':'');
+    b.textContent=d;b.onclick=()=>{st.day=d;save();renderDays();renderDay(d);updateStats();};
+    c.appendChild(b);
+  }
+}
+
+// ═══════ RENDER DAY ═══════
+function renderDay(d){
+  const wk=d<=5?'Week 1':'Week 2';
+  const cards=V.filter(v=>v.d===d);
+  const sents=S.filter(s=>s.d===d);
+  const pats=P.filter(p=>p.d===d);
+  let h='';
+
+  h+=`<div style="margin:16px 0"><span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:var(--blue);color:#fff">${wk}</span>`;
+  h+=`<h2 style="margin-top:8px">📅 Day ${d} — "${DAY_NAMES[d-1]}"</h2></div>`;
+
+  // Quest A
+  const qA=st.ds[d]?.a??null;
+  h+=`<div class="quest"><div class="quest-header"><span class="quest-title">Quest A — Flip Cards</span><span class="quest-timer">⏱ 8 phút</span></div>`;
+  h+=`<p style="font-size:12px;color:var(--text2);margin-bottom:12px">Tap thẻ để lật → Tự chấm điểm</p>`;
+  h+=`<div class="flashcard-grid">`;
+  cards.forEach((c,i)=>{
+    const idx=V.indexOf(c);
+    h+=`<div class="flashcard" id="fc${idx}" onclick="flipC(${idx})"><div class="flashcard-inner">`;
+    h+=`<div class="flashcard-front"><div class="fc-label">❌ KHẨU NGỮ #${idx+1}</div><div class="fc-word fc-word-wrong">${c.w}</div><div class="fc-hint">👆 Tap để lật</div></div>`;
+    h+=`<div class="flashcard-back"><div class="fc-word fc-word-right">${c.r}</div><div class="fc-pinyin">${c.p}</div><div class="fc-example">${c.e}</div></div>`;
+    h+=`</div></div>`;
+  });
+  h+=`</div>`;
+  h+=`<div style="margin-top:16px;text-align:center"><p style="font-size:13px;color:var(--text2);margin-bottom:8px">Nhớ được bao nhiêu?</p><div class="score-btns">`;
+  h+=`<button class="score-btn s3${qA===15?' selected':''}" onclick="sc(${d},'a',15)">5/5 ⭐⭐⭐ 15XP</button>`;
+  h+=`<button class="score-btn s1${qA===10?' selected':''}" onclick="sc(${d},'a',10)">3-4 ⭐⭐ 10XP</button>`;
+  h+=`<button class="score-btn s0${qA===5?' selected':''}" onclick="sc(${d},'a',5)">1-2 ⭐ 5XP</button>`;
+  h+=`</div></div></div>`;
+
+  // Quest B
+  const qB=st.ds[d]?.b??null;
+  h+=`<div class="quest" style="border-left-color:var(--blue)"><div class="quest-header"><span class="quest-title" style="color:var(--blue)">Quest B — Sentence Upgrade</span><span class="quest-timer">⏱ 7 phút</span></div>`;
+  h+=`<p style="font-size:12px;color:var(--text2);margin-bottom:12px">Đọc câu ❌ → Tự viết bản formal → Tap xem đáp án</p>`;
+  sents.forEach((s,i)=>{
+    const sid=d+'_'+i;
+    h+=`<div class="sentence-card"><div class="sentence-wrong">❌ ${s.w}</div>`;
+    h+=`<button class="reveal-btn" id="rb${sid}" onclick="reveal('${sid}')">🔍 Viết xong? Tap xem đáp án</button>`;
+    h+=`<div class="sentence-answer" id="sa${sid}"><div class="sentence-correct">✅ ${s.r}</div><div class="sentence-note">📝 ${s.n}</div></div></div>`;
+  });
+  h+=`<div style="margin-top:12px;text-align:center"><p style="font-size:13px;color:var(--text2);margin-bottom:8px">Giống đáp án bao nhiêu %?</p><div class="score-btns">`;
+  h+=`<button class="score-btn s3${qB===15?' selected':''}" onclick="sc(${d},'b',15)">80%+ ⭐⭐⭐ 15XP</button>`;
+  h+=`<button class="score-btn s1${qB===10?' selected':''}" onclick="sc(${d},'b',10)">50-79% ⭐⭐ 10XP</button>`;
+  h+=`<button class="score-btn s0${qB===5?' selected':''}" onclick="sc(${d},'b',5)">&lt;50% ⭐ 5XP</button>`;
+  h+=`</div></div></div>`;
+
+  // Quest C
+  if(pats.length){
+    const p=pats[0];
+    const qC=st.ds[d]?.c??null;
+    h+=`<div class="quest" style="border-left-color:var(--gold)"><div class="quest-header"><span class="quest-title" style="color:var(--gold)">Quest C — Pattern Drill</span><span class="quest-timer">⏱ 7 phút</span></div>`;
+    h+=`<div class="pattern-card"><div class="pattern-name">${p.nm}</div><div class="pattern-use">${p.use}</div>`;
+    p.ex.forEach(e=>{
+      h+=`<div class="pattern-example"><div style="font-size:15px;margin-bottom:4px">${e.z}</div>`;
+      if(e.p)h+=`<div class="pattern-pinyin">${e.p}</div>`;
+      h+=`<div class="pattern-vn">→ ${e.v}</div></div>`;
+    });
+    h+=`</div>`;
+    h+=`<div class="tip-box">💡 Đọc to 3 lần mỗi câu → Ghi âm lần cuối → Nghe lại</div>`;
+    h+=`<div style="margin-top:12px;text-align:center"><div class="score-btns">`;
+    h+=`<button class="score-btn s3${qC===10?' selected':''}" onclick="sc(${d},'c',10)">✅ Hoàn thành · 10 XP</button>`;
+    h+=`</div></div></div>`;
+  }
+
+  // Complete day
+  const done=st.cd.includes(d);
+  h+=`<div style="text-align:center;margin:24px 0"><button class="btn-primary" onclick="compDay(${d})" ${done?'disabled style="background:var(--green)"':''}>${done?'✅ Day '+d+' Done!':'🎯 Complete Day '+d}</button></div>`;
+
+  document.getElementById('dayContent').innerHTML=h;
+  // Restore revealed sentences
+  Object.keys(st.rv).forEach(k=>{if(st.rv[k]){const rb=document.getElementById('rb'+k);const sa=document.getElementById('sa'+k);if(rb)rb.style.display='none';if(sa)sa.classList.add('show');}});
+}
+
+function flipC(i){const el=document.getElementById('fc'+i);if(el)el.classList.toggle('flipped');}
+
+function reveal(sid){
+  const rb=document.getElementById('rb'+sid);const sa=document.getElementById('sa'+sid);
+  if(rb)rb.style.display='none';if(sa)sa.classList.add('show');
+  st.rv[sid]=true;save();
+}
+
+function sc(d,q,xp){
+  if(!st.ds[d])st.ds[d]={};st.ds[d][q]=xp;save();updateStats();renderDay(d);
+}
+
+function compDay(d){
+  if(!st.cd.includes(d)){
+    st.cd.push(d);
+    const today=new Date().toDateString();
+    if(st.lastDate!==today){
+      const yest=new Date(Date.now()-864e5).toDateString();
+      st.streak=(st.lastDate===yest)?st.streak+1:1;
+      st.lastDate=today;
+    }
+    save();updateStats();renderDays();renderDay(d);
+    // Achievements
+    if(st.cd.length===1)toast('🎮 Achievement: First Quest!');
+    if(st.cd.length===5)toast('🏰 Achievement: Week 1 Cleared!');
+    if(st.cd.length===10)toast('👑 Achievement: Level 1 Master!');
+    if(st.streak===3)toast('🔥 3-Day Streak!');
+    if(st.streak===7)toast('🔥🔥 7-Day Streak!');
+  }
+}
+
+// ═══════ BOSS ═══════
+function renderBoss(){
+  let h='';
+  h+=`<div class="boss-card"><div class="boss-title">🏅 Weekly Boss — Week 1</div><div class="boss-subtitle">"Flash Presentation" · 15 phút</div>`;
+  h+=`<p style="font-size:13px;line-height:1.8;margin-bottom:12px"><b>Nhiệm vụ:</b> Mở 1 slide từ báo cáo thật → Thuyết trình 2 phút bằng formal Chinese → Ghi âm</p>`;
+  h+=`<ul style="font-size:13px;line-height:2;padding-left:20px"><li>Dùng 首先…其次…最後</li><li>Dùng ≥5 từ thư ngữ</li><li>Dùng ≥2 transition patterns</li><li>Kết bài dùng 綜上所述</li></ul>`;
+  h+=`<table class="rubric"><tr><th>Tiêu chí</th><th>1⭐</th><th>3⭐</th><th>5⭐</th></tr>`;
+  h+=`<tr><td>Register</td><td>&gt;5 khẩu ngữ</td><td>2-4</td><td>0-1</td></tr>`;
+  h+=`<tr><td>Transitions</td><td>Không dùng</td><td>1-2 đúng</td><td>3+ mượt</td></tr>`;
+  h+=`<tr><td>Fluency</td><td>Khựng &gt;5</td><td>2-4</td><td>0-1</td></tr>`;
+  h+=`<tr><td>Structure</td><td>Không rõ</td><td>Có</td><td>Chuyên nghiệp</td></tr></table>`;
+  h+=`<div style="text-align:center;margin-top:12px"><div class="score-btns">`;
+  [5,10,15,20].forEach(s=>{h+=`<button class="score-btn ${s>=15?'s3':s>=10?'s1':'s0'}${st.bs.w1===s?' selected':''}" onclick="bsc('w1',${s})">${s}⭐</button>`;});
+  h+=`</div></div></div>`;
+
+  h+=`<div class="boss-card" style="border-color:var(--gold)"><div class="boss-title" style="color:var(--gold)">🐉 FINAL BOSS</div><div class="boss-subtitle">"The Boardroom" · 20 phút</div>`;
+  h+=`<p style="font-size:13px;line-height:1.8;margin-bottom:12px"><b>Scenario:</b> Monthly Marketing Meeting. Trình bày 3-5 phút trước GM.</p>`;
+  h+=`<div class="template-block" style="font-size:13px">[MỞ BÀI] 各位好，今天由我向各位報告___。
+報告內容分為三個部分：首先___，其次___，最後___。
+
+[PHẦN 1] 首先，關於___的部分…
+值得注意的是，___。
+
+[PHẦN 2] 接下來，我們來看目前的挑戰。
+___。然而，___。
+
+[PHẦN 3] 最後，關於後續行動方案。
+我方建議___。除此之外，___。
+
+[KẾT] 綜上所述，___。
+以上是我的報告，歡迎各位提問。謝謝！</div>`;
+  h+=`<table class="rubric"><tr><th>Tiêu chí</th><th>1⭐</th><th>3⭐</th><th>5⭐</th></tr>`;
+  h+=`<tr><td>Register</td><td>&gt;8 khẩu ngữ</td><td>3-7</td><td>≤2</td></tr>`;
+  h+=`<tr><td>Vocabulary</td><td>&lt;10 từ mới</td><td>10-20</td><td>20+</td></tr>`;
+  h+=`<tr><td>Transitions</td><td>&lt;3</td><td>3-6</td><td>7+</td></tr>`;
+  h+=`<tr><td>Fluency</td><td>Khựng &gt;8</td><td>3-7</td><td>≤2</td></tr>`;
+  h+=`<tr><td>Structure</td><td>Thiếu phần</td><td>Đủ</td><td>Pro</td></tr></table>`;
+  h+=`<div style="text-align:center;margin-top:12px"><div class="score-btns">`;
+  [5,10,15,20,25].forEach(s=>{h+=`<button class="score-btn ${s>=20?'s3':s>=10?'s1':'s0'}${st.bs.fn===s?' selected':''}" onclick="bsc('fn',${s})">${s}⭐</button>`;});
+  h+=`</div></div></div>`;
+
+  document.getElementById('bossContent').innerHTML=h;
+}
+function bsc(b,s){st.bs[b]=s;save();updateStats();renderBoss();}
+
+// ═══════ PROGRESS ═══════
+function renderProgress(){
+  // Review grid
+  const rg=document.getElementById('reviewGrid');rg.innerHTML='';
+  V.forEach((v,i)=>{
+    const m=!!st.cs[i];
+    const d=document.createElement('div');
+    d.className='review-item'+(m?' mastered':'');
+    d.innerHTML=`<div class="ri-word">${v.w}</div><div style="font-size:10px;color:var(--text2)">D${v.d}</div>`;
+    d.onclick=()=>{st.cs[i]=!m;save();updateStats();renderProgress();};
+    rg.appendChild(d);
+  });
+
+  // Scorecard
+  const sc=document.getElementById('scorecard');let h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
+  let w1=0,w2=0;
+  for(let d=1;d<=5;d++){const o=st.ds[d];if(o)w1+=(o.a||0)+(o.b||0)+(o.c||0);}
+  for(let d=6;d<=10;d++){const o=st.ds[d];if(o)w2+=(o.a||0)+(o.b||0)+(o.c||0);}
+  h+=`<div style="background:var(--card);padding:16px;border-radius:var(--radius)"><h3 style="color:var(--gold);margin:0 0 8px">Week 1</h3><div class="progress-bar"><div class="progress-fill gold" style="width:${Math.min(100,w1/200*100)}%"></div></div><p style="font-size:13px">${w1}/200 XP</p><p style="font-size:11px;color:var(--text2)">Boss: ${st.bs.w1||0}⭐</p></div>`;
+  h+=`<div style="background:var(--card);padding:16px;border-radius:var(--radius)"><h3 style="color:var(--gold);margin:0 0 8px">Week 2</h3><div class="progress-bar"><div class="progress-fill gold" style="width:${Math.min(100,w2/210*100)}%"></div></div><p style="font-size:13px">${w2}/210 XP</p><p style="font-size:11px;color:var(--text2)">Boss: ${st.bs.fn||0}⭐</p></div></div>`;
+
+  const tot=w1+w2,totS=(st.bs.w1||0)+(st.bs.fn||0);
+  let rank='C',re='💪';
+  if(tot>=370&&totS>=35){rank='S';re='🥇';}else if(tot>=300&&totS>=25){rank='A';re='🥈';}else if(tot>=230){rank='B';re='🥉';}
+  h+=`<div style="text-align:center;margin-top:16px;padding:20px;background:var(--card);border-radius:var(--radius)"><div style="font-size:40px">${re}</div><div style="font-size:24px;font-weight:800;color:var(--gold)">Rank ${rank}</div><div style="font-size:14px;color:var(--text2)">${tot}/410 XP · ${totS}/45⭐</div><div class="progress-bar" style="margin-top:8px"><div class="progress-fill green" style="width:${Math.min(100,tot/410*100)}%"></div></div></div>`;
+  sc.innerHTML=h;
+
+  // Achievements
+  const ach=document.getElementById('achievements');
+  const all=[
+    {id:1,i:'🎮',n:'First Quest',d:'Complete Day 1',c:st.cd.length>=1},
+    {id:2,i:'🏰',n:'Week 1',d:'Complete 5 days',c:st.cd.length>=5},
+    {id:3,i:'👑',n:'Level 1 Master',d:'Complete all 10 days',c:st.cd.length>=10},
+    {id:4,i:'🔥',n:'3-Day Streak',d:'Study 3 days straight',c:st.streak>=3},
+    {id:5,i:'💯',n:'100 XP',d:'Earn 100 XP',c:calcXP()>=100},
+    {id:6,i:'💎',n:'300 XP',d:'Earn 300 XP',c:calcXP()>=300},
+    {id:7,i:'🧠',n:'Half Mastered',d:'Master 25 cards',c:countMastered()>=25},
+    {id:8,i:'🏆',n:'Full Mastery',d:'Master all 50 cards',c:countMastered()>=50},
+  ];
+  ach.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">'+
+    all.map(a=>`<div style="padding:12px;background:var(--card);border-radius:8px;text-align:center;opacity:${a.c?1:.3}${a.c?';border:1px solid var(--gold)':''}"><div style="font-size:28px">${a.i}</div><div style="font-size:11px;font-weight:700;margin:4px 0">${a.n}</div><div style="font-size:10px;color:var(--text2)">${a.d}</div></div>`).join('')+'</div>';
+}
+
+function resetAll(){
+  if(confirm('⚠️ Xóa toàn bộ tiến độ?')){localStorage.removeItem('zw2');st=defSt();init();}
+}
+
+// ═══════ INIT ═══════
+function init(){
+  const today=new Date().toDateString();
+  if(st.lastDate&&st.lastDate!==today){
+    const y=new Date(Date.now()-864e5).toDateString();
+    if(st.lastDate!==y)st.streak=0;
+  }
+  save();renderDays();renderDay(st.day);updateStats();
+}
+init();
+</script>
+</body>
+</html>
